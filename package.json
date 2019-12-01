@@ -1,0 +1,19 @@
+{
+  "name": "adventofcode2019",
+  "version": "1.0.0",
+  "description": "Solutionsrepo for aoc2019",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/r4pt0s/adventOfCode2019.git"
+  },
+  "author": "Wolfgang Kreminger",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/r4pt0s/adventOfCode2019/issues"
+  },
+  "homepage": "https://github.com/r4pt0s/adventOfCode2019#readme"
+}
