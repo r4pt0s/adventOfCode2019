@@ -15,5 +15,8 @@
   "bugs": {
     "url": "https://github.com/r4pt0s/adventOfCode2019/issues"
   },
-  "homepage": "https://github.com/r4pt0s/adventOfCode2019#readme"
+  "homepage": "https://github.com/r4pt0s/adventOfCode2019#readme",
+  "dependencies": {
+    "nodemon": "^2.0.1"
+  }
 }
