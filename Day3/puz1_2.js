@@ -96,22 +96,19 @@ const lockPoints = (instructionSet, wire) => {
 lockPoints(testInput[0].split(","), "w1");
 lockPoints(testInput[1].split(","), "w2");
 
-console.log(wires.intersections);
-
 // Calc closest intersection Point
-console.log(
-  Math.min.apply(
-    Math,
-    wires.intersections.slice(1).map(intersection => intersection.distance)
-  )
-);
+console.log(`What is the Manhattan distance from the central port to the closest intersection?
+=> Answer: ${Math.min.apply(
+  Math,
+  wires.intersections.slice(1).map(intersection => intersection.distance)
+)}`);
 
 // calc best intersection point regarding to total steps
-console.log(
-  Math.min.apply(
-    Math,
-    wires.intersections
-      .slice(1)
-      .map(intersection => intersection.stepsToIntersection)
-  )
-);
+console.log(`
+What is the fewest combined steps the wires must take to reach an intersection?
+=> Answer: ${Math.min.apply(
+  Math,
+  wires.intersections
+    .slice(1)
+    .map(intersection => intersection.stepsToIntersection)
+)}`);

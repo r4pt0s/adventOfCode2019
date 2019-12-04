@@ -1,3 +1,6 @@
 const { pwList } = require("./shared");
 
-console.log(`Answer part one: ${pwList().length}`);
+console.log(
+  `How many different passwords within the range given in your puzzle input meet these criteria?
+=> Answer: ${pwList().length}`
+);

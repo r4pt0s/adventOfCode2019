@@ -22,4 +22,5 @@ possiblePws.forEach(pw => {
   }
 });
 
-console.log("Answer part two:", reducedPws.length);
+console.log(`How many different passwords within the range given in your puzzle input meet all of the criteria?
+=> Answer: ${reducedPws.length}`);

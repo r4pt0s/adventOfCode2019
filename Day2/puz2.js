@@ -7,7 +7,8 @@ for (let noun = 0; noun <= 99; noun++) {
     const result = intCodeComputer(noun, verb, [...input]);
 
     if (result === 19690720) {
-      console.log(`Answer: ${noun}${verb}`);
+      console.log(`What is (n * noun + verb) === 19690720?
+=> Answer: ${noun} ${verb} (Answer without whitespace)`);
       break;
     }
   }
