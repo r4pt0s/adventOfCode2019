@@ -11,10 +11,23 @@ const route = startPoint => {
   }
 };
 
-splittedInput.forEach(orbits => {
+splittedInput.forEach((orbits, i) => {
   const [_, rightOrbit] = orbits;
+  process.stdout.write("\033c");
+  console.log(
+    `calculating direct/indirect orbits `,
+    "\x1b[36m",
+    `${i + 1}`,
+    "\x1b[37m",
+    "of",
+    "\x1b[31m",
+    ` ${splittedInput.length} `
+  );
   route(rightOrbit);
 });
 
-console.log(`What is the total number of direct and indirect orbits in your map data?
-=> Answer: ${total}`);
+console.log(
+  "\x1b[37m",
+  `What is the total number of direct and indirect orbits in your map data?
+=> Answer: ${total}`
+);
