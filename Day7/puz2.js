@@ -1,10 +1,5 @@
 const { softwareController } = require("./shared");
 
-let myInput = null;
-let outPutByOpCode4 = [0];
-
-process.stdout.write("\033c");
-
 const extractParameterModeParts = instruction => {
   const arrayVersion = instruction.toString().split("");
   const slots = {
@@ -13,22 +8,10 @@ const extractParameterModeParts = instruction => {
     b: Number(arrayVersion.pop()) || 0,
     a: Number(arrayVersion.pop()) || 0
   };
-
-  //console.log(slots);
-
   return slots;
 };
 
-let phaseOutput = null;
-
-const program = phaseInput => (
-  opcode,
-  instructions,
-  a,
-  b,
-  c,
-  controlSoftware
-) => {
+const program = (opcode, instructions, a, b, c, controlSoftware, input) => {
   const [valueAtPosOne = 0, valueAtPosTwo = 0, replaceValue = 0] = instructions;
   const modeP1 =
     c === 0 ? Number(controlSoftware[valueAtPosOne]) : Number(valueAtPosOne);
@@ -48,24 +31,16 @@ const program = phaseInput => (
       controlSoftware[replaceValue] = modeP1 * modeP2;
       break;
     case 3:
-      /*  if (phaseInput.length > 1) {
-        controlSoftware[valueAtPosOne] = phaseInput.shift();
-      } else {
-        controlSoftware[valueAtPosOne] = phaseInput[0];
-      } */
-      controlSoftware[valueAtPosOne] = phaseInput;
-
-      console.log(phaseInput);
+      console.log("set input: ", input);
+      controlSoftware[valueAtPosOne] = input;
       break;
     case 4:
       returnObject.method = "output";
       returnObject.value = controlSoftware[valueAtPosOne];
-      phaseOutput = controlSoftware[valueAtPosOne];
       break;
-
     case 5:
       returnObject.method = "jump";
-      returnObject.value = modeP1 > 0 ? modeP2 : false;
+      returnObject.value = modeP1 !== 0 ? modeP2 : false;
       break;
     case 6:
       returnObject.method = "jump";
@@ -78,7 +53,6 @@ const program = phaseInput => (
       controlSoftware[replaceValue] = modeP1 === modeP2 ? 1 : 0;
       break;
     case 99:
-      console.log("PHASEOUTPUT: ", phaseOutput);
       returnObject.method = "halt";
       returnObject.value = controlSoftware[0];
       break;
@@ -92,14 +66,13 @@ const program = phaseInput => (
   return returnObject;
 };
 
-const intCodeComputer = (programWithInput, controlSoftware, input) => {
+let outPutByOpCode4 = [0];
+
+function* intCodeComputer(controlSoftware) {
   let instructionPointer = 0;
   let halt = false;
   const iterationCount = controlSoftware.length;
-  outPutByOpCode4 = [];
   let returnObject = null;
-
-  //let input = null;
 
   const opCodeParamsCount = {
     opcode0: 3,
@@ -114,6 +87,10 @@ const intCodeComputer = (programWithInput, controlSoftware, input) => {
     opCode99: 1
   };
 
+  let phaseSetting = yield "ACCEPTING PHASE SETTING";
+
+  let input = phaseSetting;
+
   while (instructionPointer < iterationCount && !halt) {
     instructionMarker = Number(controlSoftware[instructionPointer]);
     let { opCode, a, b, c } = extractParameterModeParts(instructionMarker);
@@ -123,35 +100,22 @@ const intCodeComputer = (programWithInput, controlSoftware, input) => {
       instructionPointer + opCodeParamsCount[`opcode${opCode}`] + 1
     );
 
-    console.log(
-      "instructionMarker: ",
-      Number(controlSoftware[instructionPointer]),
-      "instruction Pointer: ",
-      instructionPointer,
-      "opCode: ",
-      opCode,
-      " a: ",
-      a,
-      " b: ",
-      b,
-      "c: ",
-      c,
-      "opCodeParamsCount: ",
-      opCodeParamsCount[`opcode${opCode}`],
-      "instructions: ",
-      instructions,
-      "\n",
-      controlSoftware.join(","),
-      "\n"
-    );
+    if (opCode === 3 && phaseSetting === null) {
+      console.log("STOP AND WAIT FOR INPUT");
+      input = yield "accepting";
+      console.log("RECEIVED INPUT: ", input);
+    } else {
+      phaseSetting = null;
+    }
 
-    returnObject = programWithInput(
+    returnObject = program(
       opCode,
       instructions,
       a,
       b,
       c,
-      controlSoftware
+      controlSoftware,
+      input
     );
 
     switch (returnObject.method) {
@@ -163,16 +127,13 @@ const intCodeComputer = (programWithInput, controlSoftware, input) => {
         }
         break;
       case "output":
-        console.log("output ", returnObject.value);
         controlSoftware = returnObject.controlSoftware;
+        outPutByOpCode4.push(returnObject.value);
         instructionPointer += opCodeParamsCount[`opcode${opCode}`] + 1;
-        programWithInput = program(returnObject.value);
-        //input = returnObject.value;
         break;
-      //return controlSoftware;
       case "halt":
-        console.log("HALT");
         halt = true;
+        return outPutByOpCode4;
       default:
         instructionPointer += opCodeParamsCount[`opcode${opCode}`] + 1;
         break;
@@ -182,75 +143,98 @@ const intCodeComputer = (programWithInput, controlSoftware, input) => {
   }
 
   return { controlSoftware, returnObject };
-};
+}
 
 const possibleEvaluatedPhases = arrayCreate([5, 6, 7, 8, 9], 5);
-const signals = [];
-let amp1 = null;
-let amp2 = null;
-let amp3 = null;
-let amp4 = null;
-let amp5 = 0;
 
-amp5 = {
-  controlSoftware: "3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5"
-    .split(",")
-    .map(Number)
-};
+signals = possibleEvaluatedPhases.map((sequenz, j) => {
+  let amp1 = intCodeComputer([...softwareController], "sequenz for amp1");
+  let amp2 = intCodeComputer([...softwareController], "sequenz for amp2");
+  let amp3 = intCodeComputer([...softwareController], "sequenz for amp3");
+  let amp4 = intCodeComputer([...softwareController], "sequenz for amp4");
+  let amp5 = intCodeComputer([...softwareController], "sequenz for amp5");
 
-const rounds = amp5.length;
+  let checker = false;
 
-const sequenz = [9, 8, 7, 6, 5];
+  let output = {
+    value: 0
+  };
+  const doneStates = {
+    amp1: false,
+    amp2: false,
+    amp3: false,
+    amp4: false,
+    amp5: false
+  };
+  outPutByOpCode4 = [0];
 
-//possibleEvaluatedPhases.forEach((sequenz, j) => {
-outPutByOpCode4 = [0];
-let i = 0;
-//18216;
+  amp1.next(); // START THE GENERATOR AMP 1
+  amp2.next(); // START THE GENERATOR AMP 2
+  amp3.next(); // START THE GENERATOR AMP 3
+  amp4.next(); // START THE GENERATOR AMP 4
+  amp5.next(); // START THE GENERATOR AMP 5
 
-//while (i < 125) {
-process.stdout.write("\033c");
-// Sequenze ${j} of ${possibleEvaluatedPhases.length}
-console.log(`
-   
-    Processed round ${i} of ${rounds}
-    Current signals: ${outPutByOpCode4}`);
+  // SETTING THE PHASE => all generators at listening state
+  genamp1 = amp1.next(sequenz[0]);
+  genamp2 = amp2.next(sequenz[1]);
+  genamp3 = amp3.next(sequenz[2]);
+  genamp4 = amp4.next(sequenz[3]);
+  genamp5 = amp5.next(sequenz[4]);
 
-//amp should wait until it receives it next input
-// think of generator functions for possible solutions
-//
+  while (!checker) {
+    output = amp1.next(outPutByOpCode4.pop());
 
-amp1 = intCodeComputer(program(sequenz[0]), amp5.controlSoftware);
-amp2 = intCodeComputer(program(sequenz[1]), amp1.controlSoftware);
-amp3 = intCodeComputer(program(sequenz[2]), amp2.controlSoftware);
-amp4 = intCodeComputer(program(sequenz[3]), amp3.controlSoftware);
-amp5 = intCodeComputer(program(sequenz[4]), amp4.controlSoftware);
+    console.log(output);
 
-i++;
+    if (output.done) {
+      doneStates.amp1 = true;
+    }
 
-//}
+    output = amp2.next(outPutByOpCode4.pop());
 
-//signals.push(outPutByOpCode4[outPutByOpCode4.length - 1]);
-//});
+    console.log(output);
 
-console.log(phaseOutput);
+    if (output.done) {
+      doneStates.amp2 = true;
+    }
 
-/* possibleEvaluatedPhases.forEach((phases, i) => {
+    output = amp3.next(outPutByOpCode4.pop());
 
-  amp5 = 0;
-  while (i < 5) {
-    console.log(`start with amp5: ${amp5}`)
-    amp1 = intCodeComputer(program([phases[0], amp5]), myInput);
-    amp2 = intCodeComputer(program([phases[1], amp1]), myInput);
-    amp3 = intCodeComputer(program([phases[2], amp2]), myInput);
-    amp4 = intCodeComputer(program([phases[3], amp3]), myInput);
-    amp5 = intCodeComputer(program([phases[4], amp4]), myInput);
+    console.log(output);
+
+    if (output.done) {
+      doneStates.amp3 = true;
+    }
+
+    output = amp4.next(outPutByOpCode4.pop());
+
+    console.log(output);
+    if (output.done) {
+      doneStates.amp4 = true;
+    }
+
+    output = amp5.next(outPutByOpCode4.pop());
+
+    console.log(output);
+
+    if (output.done) {
+      doneStates.amp5 = true;
+    }
+
+    checker =
+      doneStates.amp1 &&
+      doneStates.amp2 &&
+      doneStates.amp3 &&
+      doneStates.amp4 &&
+      doneStates.amp5
+        ? true
+        : false;
   }
-  signals.push(amp5);
-})
- */
 
-//139629729
-//console.log(signals);
+  return output.value;
+});
+
+console.log(Math.max(...signals));
 
 //Thanks to stackovewflow => https://stackoverflow.com/a/49652789
 function arrayCreate(array, size) {
